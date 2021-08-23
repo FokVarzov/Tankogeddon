@@ -19,10 +19,20 @@ ACannon::ACannon()
 
 	ProjectileSpawnPoint = CreateDefaultSubobject<UArrowComponent>(TEXT("Spawn point"));
 	ProjectileSpawnPoint->SetupAttachment(Mesh);
+
+	LoadedAmmo = 10;
+	AmmoPool = 10;
 }
 
 void ACannon::Fire()
 {
+	if (LoadedAmmo <= 0)
+	{
+		return;
+	}
+
+	LoadedAmmo = LoadedAmmo - 1;
+
 	if (!bReadyToFire)
 	{
 		return;
@@ -35,21 +45,40 @@ void ACannon::Fire()
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(10, 1, FColor::Green, "Fire - trace");
+		GEngine->AddOnScreenDebugMessage(10, 1, FColor::Green, "Fire - trace" );
 	}
 
-	GetWorld()->GetTimerManager().SetTimer(ReloadTimerHandle, this, &ACannon::Reload, 1 / FireRate, false);
+	GetWorld()->GetTimerManager().SetTimer(ReloadTimerHandle, this, &ACannon::Reload, 0.3 / FireRate, false);
 }
+
+void ACannon::FireSpecial()
+{
+	
+	if (!bReadyToFire)
+	{
+		return;
+	}
+	bReadyToFire = false;
+
+	if (Type == ECannonType::FireProjectile)
+	{
+		GEngine->AddOnScreenDebugMessage(10, 1, FColor::Yellow, "Fire - BigBadaBoom");
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(10, 1, FColor::Yellow, "Fire - beam");
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(ReloadTimerHandle, this, &ACannon::Reload, 2 / FireRate, false);
+}
+
 
 bool ACannon::IsReadyToFire()
 {
 	return bReadyToFire;
 }
 
-void ACannon::Reload()
-{
-	bReadyToFire = true;
-}
+
 
 void ACannon::BeginPlay()
 {
@@ -62,3 +91,8 @@ void ACannon::BeginPlay()
 	GetWorld()->GetTimerManager().ClearTimer(ReloadTimerHandle);
 }
 */
+
+void ACannon::Reload()
+{
+	bReadyToFire = true;
+}

@@ -25,9 +25,15 @@ protected:
 		float FireRange = 1000;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
 		float FireDamage = 1;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Fire params")
 		ECannonType Type = ECannonType::FireProjectile;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ammo")
+		float LoadedAmmo;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ammo")
+		float AmmoPool;
+
+
+
 
 	FTimerHandle ReloadTimerHandle;
 
@@ -38,11 +44,16 @@ public:
 
 	void Fire();
 
+	void FireSpecial();
+
+    
+
 	bool IsReadyToFire();
 
 protected:
 	virtual void BeginPlay() override;
 	//virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+// Reload your weapon
 	void Reload();
 };
