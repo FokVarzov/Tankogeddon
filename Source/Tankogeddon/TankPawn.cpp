@@ -47,10 +47,10 @@ void ATankPawn::BeginPlay()
 {
 	Super::BeginPlay();
 	TankController = Cast<ATankPlayerController>(GetController());
-	SetupCannon();
+	SetupCannon(CannonClass);
 }
 
-void ATankPawn::SetupCannon()
+void ATankPawn::SetupCannon(TSubclassOf<ACannon> InCannonClass)
 {
 	if (Cannon)
 	{
@@ -61,7 +61,7 @@ void ATankPawn::SetupCannon()
 	FActorSpawnParameters Params;
 	Params.Instigator = this;
 	Params.Owner = this;
-	Cannon = GetWorld()->SpawnActor<ACannon>(CannonClass, Params);
+	Cannon = GetWorld()->SpawnActor<ACannon>(InCannonClass, Params);
 	Cannon->AttachToComponent(CannonSetupPoint, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 }
 
@@ -71,12 +71,16 @@ void ATankPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	// Tank movement
+	CurrentForwardAxisValue = FMath::FInterpTo(CurrentForwardAxisValue, TargetForwardAxisValue, DeltaTime, MovementSmootheness);
 	FVector currentLocation = GetActorLocation();
 	FVector forwardVector = GetActorForwardVector();
-	FVector movePosition = currentLocation + forwardVector * MoveSpeed * TargetForwardAxisValue * DeltaTime;
+
+	FVector movePosition = currentLocation + forwardVector * CurrentForwardAxisValue * MoveSpeed * DeltaTime;
+	
 	SetActorLocation(movePosition, true);
+
 	// Tank rotation
-	CurrentRightAxisValue = FMath::Lerp(CurrentRightAxisValue, TargetRightAxisValue, InterpolationKey);
+	CurrentRightAxisValue = FMath::FInterpTo(CurrentRightAxisValue, TargetRightAxisValue,DeltaTime, RotationSmootheness);
 
 	//UE_LOG(LogTemp, Warning, TEXT("CurrentRightAxisValue = %f TargetRightAxisValue = %f"), 
 	//CurrentRightAxisValue, TargetRightAxisValue);
@@ -97,7 +101,7 @@ void ATankPawn::Tick(float DeltaTime)
 		FRotator currRotation = TurretMesh->GetComponentRotation();
 		targetRotation.Pitch = currRotation.Pitch;
 		targetRotation.Roll = currRotation.Roll;
-		TurretMesh->SetWorldRotation(FMath::Lerp(currRotation, targetRotation, TurretRotationInterpolationKey));
+		TurretMesh->SetWorldRotation(FMath::RInterpConstantTo(currRotation, targetRotation,DeltaTime, TurretRotationSpeed));
 	}
 
 }
@@ -130,3 +134,4 @@ void ATankPawn::FireSpecial()
 	}
 
 }
+

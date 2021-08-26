@@ -30,9 +30,16 @@ protected:
 		TSubclassOf<ACannon> CannonClass;
 		
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
-		float MoveSpeed = 250.f;
+		float MoveSpeed = 300.f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
-		float RotationSpeed = 250.f;
+		float MovementSmootheness = 1.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
+		float TurretRotationSpeed = 100.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
+		float RotationSpeed = 50.f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
+		float RotationSmootheness = 1.f;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
 		USpringArmComponent* SpringArm;
@@ -67,12 +74,17 @@ public:
 		void Fire();
 	UFUNCTION()
 		void FireSpecial();
+	//UFUNCTION()
+		//void ReloadWeapon();
+	UFUNCTION()
+	void SetupCannon(TSubclassOf<ACannon> InCannonClass);
+
 private:
 
 	float TargetForwardAxisValue;
 	float TargetRightAxisValue;
 	float CurrentRightAxisValue;
-
+	float CurrentForwardAxisValue;
 	UPROPERTY()
 		ATankPlayerController* TankController;
 
