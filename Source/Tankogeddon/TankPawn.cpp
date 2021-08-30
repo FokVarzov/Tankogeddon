@@ -7,13 +7,13 @@
 #include "Math/UnrealMathUtility.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/ArrowComponent.h"
+#include <Components/BoxComponent.h>
 
 #include "TankPlayerController.h"
 #include "Tankogeddon.h"
 #include "Cannon.h"
+#include "HealthComponent.h"
 
-DECLARE_LOG_CATEGORY_EXTERN(TankLog, All, All);
-DEFINE_LOG_CATEGORY(TankLog);
 
 // Sets default values
 ATankPawn::ATankPawn()
@@ -40,6 +40,13 @@ ATankPawn::ATankPawn()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm);
 
+	HealthComponent = CreateDefaultSubobject<UHealthComponent>(TEXT("Health component"));
+	HealthComponent->OnDie.AddDynamic(this, &ATankPawn::Die);
+	HealthComponent->OnDamaged.AddDynamic(this, &ATankPawn::DamageTaken);
+
+	HitCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("Hit collider"));
+	HitCollider->SetupAttachment(BodyMesh);
+	
 }
 
 // Called when the game starts or when spawned
@@ -52,19 +59,37 @@ void ATankPawn::BeginPlay()
 
 void ATankPawn::SetupCannon(TSubclassOf<ACannon> InCannonClass)
 {
-	if (Cannon)
+	if (ActiveCannon)
 	{
-		Cannon->Destroy();
-		Cannon = nullptr;
+		ActiveCannon->Destroy();
+		ActiveCannon = nullptr;
 	}
 
 	FActorSpawnParameters Params;
 	Params.Instigator = this;
 	Params.Owner = this;
-	Cannon = GetWorld()->SpawnActor<ACannon>(InCannonClass, Params);
-	Cannon->AttachToComponent(CannonSetupPoint, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	ActiveCannon = GetWorld()->SpawnActor<ACannon>(InCannonClass, Params);
+	ActiveCannon->AttachToComponent(CannonSetupPoint, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 }
 
+void ATankPawn::CycleCannon()
+{
+	Swap(ActiveCannon, InactiveCannon);
+	if (ActiveCannon)
+	{
+		ActiveCannon->SetVisibility(true);
+	}
+
+	if (InactiveCannon)
+	{
+		InactiveCannon->SetVisibility(false);
+	}
+}
+
+ACannon* ATankPawn::GetActiveCannon() const
+{
+	return ActiveCannon;
+}
 
 // Called every frame
 void ATankPawn::Tick(float DeltaTime)
@@ -77,13 +102,18 @@ void ATankPawn::Tick(float DeltaTime)
 
 	FVector movePosition = currentLocation + forwardVector * CurrentForwardAxisValue * MoveSpeed * DeltaTime;
 	
-	SetActorLocation(movePosition, true);
+	FHitResult* SweepHitResult = nullptr;
+	SetActorLocation(movePosition, true, SweepHitResult);
+	if (SweepHitResult)
+	{
+		CurrentForwardAxisValue = 0.f;
+	}
 
 	// Tank rotation
 	CurrentRightAxisValue = FMath::FInterpTo(CurrentRightAxisValue, TargetRightAxisValue,DeltaTime, RotationSmootheness);
 
-	//UE_LOG(LogTemp, Warning, TEXT("CurrentRightAxisValue = %f TargetRightAxisValue = %f"), 
-	//CurrentRightAxisValue, TargetRightAxisValue);
+	UE_LOG(LogTemp, Warning, TEXT("CurrentRightAxisValue = %f TargetRightAxisValue = %f"), 
+	CurrentRightAxisValue, TargetRightAxisValue);
 
 	float yawRotation = RotationSpeed * CurrentRightAxisValue * DeltaTime;
 	FRotator currentRotation = GetActorRotation();
@@ -120,18 +150,40 @@ void ATankPawn::RotateRight(float AxisValue)
 
 void ATankPawn::Fire()
 {
-	if (Cannon)
+	if (ActiveCannon)
 	{
-		Cannon->Fire();
+		ActiveCannon->Fire();
 	}
 
 }
 void ATankPawn::FireSpecial()
 {
-	if (Cannon)
+	if (ActiveCannon)
 	{
-		Cannon->FireSpecial();
+		ActiveCannon->FireSpecial();
 	}
 
 }
 
+void ATankPawn::Destroyed()
+{
+	if (ActiveCannon)
+	{
+		ActiveCannon->Destroy();
+	}
+}
+
+void ATankPawn::TakeDamage(FDamageData DamageData)
+{
+	HealthComponent->TakeDamage(DamageData);
+}
+
+void ATankPawn::Die()
+{
+	Destroy();
+}
+
+void ATankPawn::DamageTaken(float InDamage)
+{
+	UE_LOG(LogTankogeddon, Warning, TEXT("Tank %s taked damage:%f Health:%f"), *GetName(), InDamage, HealthComponent->GetHealth());
+}

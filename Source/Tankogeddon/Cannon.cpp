@@ -8,6 +8,10 @@
 #include "Engine/World.h"
 #include "Projectile.h"
 #include "DrawDebugHelpers.h"
+#include "ActorPoolSubsystem.h"
+#include "HealthComponent.h"
+#include "DamageTaker.h"
+
 
 ACannon::ACannon()
 {
@@ -16,6 +20,7 @@ ACannon::ACannon()
 	RootComponent = RootComp;
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Cannon mesh"));
 	Mesh->SetupAttachment(RootComponent);
+	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	ProjectileSpawnPoint = CreateDefaultSubobject<UArrowComponent>(TEXT("Spawn point"));
 	ProjectileSpawnPoint->SetupAttachment(Mesh);
@@ -71,6 +76,18 @@ bool ACannon::HasSpecialFire() const
 	return bHasSpecialFire;
 }
 
+void ACannon::SetVisibility(bool bIsVisible)
+{
+	Mesh->SetHiddenInGame(!bIsVisible);
+}
+
+void ACannon::AddAmmo(int32 InNumAmmo)
+{
+	NumAmmo = FMath::Clamp(NumAmmo + InNumAmmo, 0, MaxAmmo);
+	//UE_LOG(LogTankogeddon, Log, TEXT("AddAmmo(%d)! NumAmmo: %d"), InNumAmmo, NumAmmo);
+}
+
+
 void ACannon::BeginPlay()
 {
 	Super::BeginPlay();
@@ -99,9 +116,12 @@ void ACannon::Shot()
 		{
 			GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1, FColor::Green, TEXT("Fire - projectile"));
 		    
-			AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, ProjectileSpawnPoint->GetComponentLocation(), ProjectileSpawnPoint->GetComponentRotation());
+			UActorPoolSubsystem* Pool = GetWorld()->GetSubsystem<UActorPoolSubsystem>();
+			FTransform SpawnTransform(ProjectileSpawnPoint->GetComponentRotation(), ProjectileSpawnPoint->GetComponentLocation(), FVector::OneVector);
+			AProjectile* Projectile = Cast<AProjectile>(Pool->RetreiveActor(ProjectileClass, SpawnTransform));
 			if (Projectile)
 			{
+				Projectile->SetInstigator(GetInstigator());
 				Projectile->Start();
 			}
 		}
@@ -118,11 +138,14 @@ void ACannon::Shot()
 			if (GetWorld()->LineTraceSingleByChannel(HitResult, start, end, ECollisionChannel::ECC_Visibility, TraceParams))
 			{
 				DrawDebugLine(GetWorld(), start, HitResult.Location, FColor::Red, false, 0.5f, 0, 5);
-				if (HitResult.Actor.Get())
+				if (HitResult.Component.IsValid() && HitResult.Component->GetCollisionObjectType() == ECollisionChannel::ECC_Destructible)
 				{
-					HitResult.Actor.Get()->Destroy();
+					
+					HitResult.Actor.Get() -> Destroy();
 				}
+				
 			}
+
 			else DrawDebugLine(GetWorld(), start, end, FColor::Red, false, 0.5f, 0, 5);
 		}   
 

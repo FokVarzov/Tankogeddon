@@ -19,6 +19,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo")
 		TSubclassOf<ACannon> CannonClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammo")
+		int32 NumAmmo;
 
 public:
 	AAmmoBox();
