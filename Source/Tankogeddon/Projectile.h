@@ -25,11 +25,13 @@ protected:
         float Damage = 1.f;
 
     FTimerHandle MovementTimerHandle;
+    FVector StartLocation;
 
 public:
     AProjectile();
 
     void Start();
+    void Stop();
 
 protected:
     UFUNCTION()
