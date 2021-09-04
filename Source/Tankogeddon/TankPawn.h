@@ -1,132 +1,92 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
-#include "HealthComponent.h"
 #include "DamageTaker.h"
+#include "BasePawn.h"
 #include "TankPawn.generated.h"
 
-class UStaticMeshComponent;
-class UCameraComponent;
+
+
 class USpringArmComponent;
+class UCameraComponent;
 class ATankPlayerController;
-class ACannon;
-class UArrowComponent;
-class UBoxComponent;
-class UHealthComponent;
+
 
 UCLASS()
-class TANKOGEDDON_API ATankPawn : public APawn, public IDamageTaker
+class TANKOGEDDON_API ATankPawn : public ABasePawn
 {
-	GENERATED_BODY()
-
-protected:
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
-		UStaticMeshComponent* BodyMesh;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
-		UStaticMeshComponent* TurretMesh;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
-		UArrowComponent* CannonSetupPoint;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
-		UHealthComponent* HealthComponent;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
-		UBoxComponent* HitCollider;
-
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Turret|Cannon")
-		TSubclassOf<ACannon> CannonClass;
-		
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
-		float MoveSpeed = 300.f;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
-		float MovementSmootheness = 1.f;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
-		float TurretRotationSpeed = 100.f;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
-		float RotationSpeed = 50.f;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
-		float RotationSmootheness = 1.f;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
-		USpringArmComponent* SpringArm;
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
-		UCameraComponent* Camera;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
-		float InterpolationKey = 0.1f;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Turret|Speed")
-		float TurretRotationInterpolationKey = 0.5f;
-
-	
-	
-	 
+    GENERATED_BODY()
 
 public:
-	// Sets default values for this pawn's properties 
-	ATankPawn();
-
-	UFUNCTION()
-		void MoveForward(float AxisValue);
-	    void RotateRight(float AxisValue);
-
-	UFUNCTION()
-		virtual void TakeDamage(FDamageData DamageData) override;
-
+    // Sets default values for this pawn's properties
+    ATankPawn();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-	virtual void Destroyed() override;
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
+        USpringArmComponent* SpringArm;
 
-	void SetupCannon();
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
+        UCameraComponent* Camera;
 
-	UFUNCTION()
-		void Die();
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
+        float MoveSpeed = 100.f;
 
-	UFUNCTION()
-		void DamageTaken(float InDamage);
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
+        float MovementSmootheness = 0.1f;
 
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
+        float RotationSpeed = 100.f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement|Speed")
+        float RotationSmootheness = 0.1f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Move params|Patrol points", Meta = (MakeEditWidget = true))
+        TArray<FVector> PatrollingPoints;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Move params|Accurency")
+        float MovementAccuracy = 50.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+        UForceFeedbackEffect* HitForceEffect;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+        TSubclassOf<UMatineeCameraShake> HitShake;
+
+    // Called when the game starts or when spawned
+    virtual void BeginPlay() override;
+    virtual void TargetDestroyed(AActor* Target) override;
+
+    virtual void DamageTaken(float DamageValue) override;
 
 public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+    // Called every frame
+    virtual void Tick(float DeltaTime) override;
 
-	UFUNCTION()
-		void Fire();
-	UFUNCTION()
-		void FireSpecial();
-	
-	UFUNCTION()
-	void SetupCannon(TSubclassOf<ACannon> InCannonClass);
+    UFUNCTION()
+        void MoveForward(float AxisValue);
 
-	UFUNCTION()
-		void CycleCannon();
+    UFUNCTION()
+        void RotateRight(float AxisValue);
 
-	UFUNCTION()
-		ACannon* GetActiveCannon() const;
+    UFUNCTION()
+        const TArray<FVector>& GetPatrollingPoints()
+    {
+        return PatrollingPoints;
+    };
 
-	
+    UFUNCTION()
+        float GetMovementAccurency()
+    {
+        return MovementAccuracy;
+    };
 
+private:
+    float TargetForwardAxisValue = 0.f;
+    float CurrentForwardAxisValue = 0.f;
+    float TargetRightAxisValue = 0.f;
+    float CurrentRightAxisValue = 0.f;
 
-protected:
-
-	float TargetForwardAxisValue;
-	float TargetRightAxisValue;
-	float CurrentRightAxisValue;
-	float CurrentForwardAxisValue;
-
-	UPROPERTY()
-		ATankPlayerController* TankController;
-
-	UPROPERTY()
-		ACannon* ActiveCannon;
-
-	UPROPERTY()
-		ACannon* InactiveCannon;
+    int32 AccumulatedScores = 0;
 };
-
