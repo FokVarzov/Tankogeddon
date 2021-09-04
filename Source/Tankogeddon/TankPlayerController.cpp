@@ -1,77 +1,114 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
 #include "TankPlayerController.h"
 #include "TankPawn.h"
-#include "DrawDebugHelpers.h"
+#include <DrawDebugHelpers.h>
 #include "ActorPoolSubsystem.h"
-
 
 ATankPlayerController::ATankPlayerController()
 {
-	bShowMouseCursor = true;
-}
-
-void ATankPlayerController::Tick(float DeltaTime)
-{
-	FVector mouseDirection;
-	DeprojectMousePositionToWorld(MousePos, mouseDirection);
-	FVector pawnPos = TankPawn->GetActorLocation();
-	MousePos.Z = pawnPos.Z;
-	FVector dir = MousePos - pawnPos;
-	dir.Normalize();
-	MousePos = pawnPos + dir * 1000;
-	DrawDebugLine(GetWorld(), pawnPos, MousePos, FColor::Green, false, 0.1f, 0, 5);
+    bShowMouseCursor = true;
 }
 
 void ATankPlayerController::SetupInputComponent()
 {
-	Super::SetupInputComponent();
-	InputComponent->BindAxis("MoveForward", this, &ATankPlayerController::MoveForward);
-	InputComponent->BindAxis("RotateRight", this, &ATankPlayerController::RotateRight);
-	InputComponent->BindAction("Fire", IE_Pressed, this, &ATankPlayerController::Fire);
-	InputComponent->BindAction("FireSpecial", IE_Pressed, this, &ATankPlayerController::FireSpecial);
-	InputComponent->BindAction("CycleCannon", IE_Pressed, this, &ATankPlayerController::CycleCannon);
-	//InputComponent->BindAction("Reload", IE_Pressed, this, &ATankPlayerController::ReloadWeapon);
+    Super::SetupInputComponent();
+    InputComponent->BindAxis("MoveForward", this, &ATankPlayerController::MoveForward);
+    InputComponent->BindAxis("RotateRight", this, &ATankPlayerController::RotateRight);
+    InputComponent->BindAction("Fire", IE_Pressed, this, &ATankPlayerController::Fire);
+    InputComponent->BindAction("FireSpecial", IE_Pressed, this, &ATankPlayerController::FireSpecial);
+    InputComponent->BindAction("CycleCannon", IE_Pressed, this, &ATankPlayerController::CycleCannon);
+    InputComponent->BindAxis("RotateTurretRight");
+}
+
+void ATankPlayerController::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+
+    if (!TankPawn)
+    {
+        return;
+    }
+
+    FVector2D MouseScreenPosition;
+    GetMousePosition(MouseScreenPosition.X, MouseScreenPosition.Y);
+    bool bWasMouseMoved = !LastFrameMousePosition.Equals(MouseScreenPosition);
+    LastFrameMousePosition = MouseScreenPosition;
+
+    float TurretRotationAxis = GetInputAxisValue("RotateTurretRight");
+    if (FMath::IsNearlyZero(TurretRotationAxis) && (bWasMouseMoved || bIsControllingFromMouse))
+    {
+        bIsControllingFromMouse = true;
+        FVector WorldMousePosition, MouseDirection;
+        DeprojectMousePositionToWorld(WorldMousePosition, MouseDirection);
+
+        FVector PawnPos = TankPawn->GetActorLocation();
+        WorldMousePosition.Z = PawnPos.Z;
+        FVector NewTurretDirection = WorldMousePosition - PawnPos;
+        NewTurretDirection.Normalize();
+
+        FVector TurretTarget = PawnPos + NewTurretDirection * 1000.f;
+        TankPawn->SetTurretTarget(TurretTarget);
+    }
+    else
+    {
+        bIsControllingFromMouse = false;
+        TankPawn->SetTurretRotationAxis(TurretRotationAxis);
+    }
+
+    DrawDebugLine(GetWorld(), TankPawn->GetEyesPosition(), TankPawn->GetEyesPosition() + TankPawn->GetTurretForwardVector() * 1000.f, FColor::Green, false, 0.1f, 0.f, 5.f);
 }
 
 void ATankPlayerController::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
-	TankPawn = Cast<ATankPawn>(GetPawn());
+    GetMousePosition(LastFrameMousePosition.X, LastFrameMousePosition.Y);
+    TankPawn = Cast<ATankPawn>(GetPawn());
 }
 
 void ATankPlayerController::MoveForward(float AxisValue)
 {
-
-	TankPawn->MoveForward(AxisValue);
+    if (TankPawn)
+    {
+        TankPawn->MoveForward(AxisValue);
+    }
 }
 
 void ATankPlayerController::RotateRight(float AxisValue)
 {
-
-	TankPawn->RotateRight(AxisValue);
+    if (TankPawn)
+    {
+        TankPawn->RotateRight(AxisValue);
+    }
 }
 
 void ATankPlayerController::Fire()
 {
-	TankPawn->Fire();
+    if (TankPawn)
+    {
+        TankPawn->Fire();
+    }
 }
+
 void ATankPlayerController::FireSpecial()
 {
-	TankPawn->FireSpecial();
+    if (TankPawn)
+    {
+        TankPawn->FireSpecial();
+    }
 }
 
 void ATankPlayerController::CycleCannon()
 {
-	TankPawn->CycleCannon();
+    if (TankPawn)
+    {
+        TankPawn->CycleCannon();
+    }
 }
 
 void ATankPlayerController::DumpActorPoolSubsystemStats()
 {
-	GetWorld()->GetSubsystem<UActorPoolSubsystem>()->DumpPoolStats();
+    GetWorld()->GetSubsystem<UActorPoolSubsystem>()->DumpPoolStats();
 }
-
-/*void ATankPlayerController::ReloadWeapon()
-{
-	TankPawn->ReloadWeapon();
-}
-*/
