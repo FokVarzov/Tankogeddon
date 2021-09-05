@@ -18,6 +18,15 @@ void ABasePawnAIController::Tick(float DeltaTime)
 
     if (!MyPawn || !PlayerPawn)
     {
+        MyPawn = Cast<ABasePawn>(GetPawn());
+        PlayerPawn = GetWorld()->GetFirstPlayerController()->GetPawn();
+
+        return;
+    }
+
+
+    if (!MyPawn || !PlayerPawn)
+    {
         return;
     }
 

@@ -33,6 +33,8 @@ protected:
 protected:
     virtual void BeginPlay() override;
 
+    void Initalize();
+
     virtual void Tick(float DeltaTime) override;
 
     float GetRotationValue();
