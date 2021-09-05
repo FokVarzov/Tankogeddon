@@ -13,6 +13,7 @@
 #include "Cannon.h"
 #include "HealthComponent.h"
 #include "Scorable.h"
+#include <Engine/TargetPoint.h>
 
 // Sets default values
 ATankPawn::ATankPawn()
@@ -39,6 +40,22 @@ void ATankPawn::MoveForward(float AxisValue)
 void ATankPawn::RotateRight(float AxisValue)
 {
     TargetRightAxisValue = AxisValue;
+}
+
+TArray<FVector> ATankPawn::GetPatrollingPoints()
+{
+    TArray<FVector> Result;
+    for (ATargetPoint* Point : PatrollingPoints)
+    {
+        Result.Add(Point->GetActorLocation());
+    }
+
+    return Result;
+}
+
+void ATankPawn::SetPatrollingPoints(const TArray<ATargetPoint*>& NewPatrollingPoints)
+{
+    PatrollingPoints = NewPatrollingPoints;
 }
 
 // Called when the game starts or when spawned

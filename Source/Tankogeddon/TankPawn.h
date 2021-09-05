@@ -12,6 +12,7 @@
 class USpringArmComponent;
 class UCameraComponent;
 class ATankPlayerController;
+class ATargetPoint;
 
 
 UCLASS()
@@ -43,7 +44,7 @@ protected:
         float RotationSmootheness = 0.1f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Move params|Patrol points", Meta = (MakeEditWidget = true))
-        TArray<FVector> PatrollingPoints;
+        TArray<ATargetPoint*> PatrollingPoints;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI|Move params|Accurency")
         float MovementAccuracy = 50.f;
@@ -71,10 +72,10 @@ public:
         void RotateRight(float AxisValue);
 
     UFUNCTION()
-        const TArray<FVector>& GetPatrollingPoints()
-    {
-        return PatrollingPoints;
-    };
+        TArray<FVector> GetPatrollingPoints();
+
+    UFUNCTION()
+        void SetPatrollingPoints(const TArray<ATargetPoint*>& NewPatrollingPoints);
 
     UFUNCTION()
         float GetMovementAccurency()
