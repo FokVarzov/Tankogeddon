@@ -62,6 +62,10 @@ void ATankFactory::SpawnNewTank()
     NewTank->SetPatrollingPoints(TankWayPoints);
     //
     UGameplayStatics::FinishSpawningActor(NewTank, SpawnTransform);
+    UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TankCreation, GetActorTransform());
+    UGameplayStatics::PlaySoundAtLocation(GetWorld(), ConstructionSound, GetActorLocation());
+
+
 }
 
 void ATankFactory::Die()

@@ -55,6 +55,12 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
         USoundBase* DestructionSound;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effects")
+        UParticleSystem* TankCreation;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+        USoundBase* ConstructionSound;
+
 public:
     // Sets default values for this actor's properties
     ATankFactory();
