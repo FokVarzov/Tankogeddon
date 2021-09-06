@@ -66,6 +66,10 @@ void ATankFactory::SpawnNewTank()
 
 void ATankFactory::Die()
 {
+    UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), DestuctionParticleSystem, GetActorTransform());
+    UGameplayStatics::PlaySoundAtLocation(GetWorld(), DestructionSound, GetActorLocation());
+    
+    
     if (LinkedMapLoader)
     {
         LinkedMapLoader->SetIsActivated(true);

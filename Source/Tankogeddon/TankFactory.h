@@ -15,6 +15,8 @@ class UHealthComponent;
 class ATankPawn;
 class ATargetPoint;
 class AMapLoader;
+class UParticleSystem;
+class USoundBase;
 
 
 UCLASS()
@@ -46,6 +48,12 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn tanks params")
         AMapLoader* LinkedMapLoader;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effects")
+        UParticleSystem* DestuctionParticleSystem;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+        USoundBase* DestructionSound;
 
 public:
     // Sets default values for this actor's properties
