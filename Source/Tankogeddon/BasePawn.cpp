@@ -38,6 +38,8 @@ ABasePawn::ABasePawn()
     HealthComponent->OnDie.AddDynamic(this, &ABasePawn::Die);
     HealthComponent->OnDamaged.AddDynamic(this, &ABasePawn::DamageTaken);
     HealthComponent->bEditableWhenInherited = true;
+
+    //ForceStrength = 1000.0f;
 }
 
 // Called when the game starts or when spawned
@@ -127,6 +129,9 @@ void ABasePawn::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
+  //  FVector Right = BodyMesh->GetRightVector();
+   // BodyMesh->AddForce(Right * ForceStrength * BodyMesh->GetMass());
+
     if (bIsTurretTargetSet)
     {
         FRotator TargetRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), TurretTarget);
@@ -181,5 +186,7 @@ void ABasePawn::Die()
 
 void ABasePawn::DamageTaken(float InDamage)
 {
+    
+    
     UE_LOG(LogTankogeddon, Log, TEXT("Pawn %s taken damage:%f "), *GetName(), InDamage);
 }

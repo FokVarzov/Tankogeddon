@@ -29,6 +29,9 @@ protected:
         UStaticMeshComponent* BuildingMesh;
 
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
+        UStaticMeshComponent* DestroyedMesh;
+
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
         UArrowComponent* TankSpawnPoint;
 
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
@@ -36,6 +39,12 @@ protected:
 
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
         UHealthComponent* HealthComponent;
+
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
+        UParticleSystemComponent* TankSpawnVFX;
+
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "Components")
+        UAudioComponent* TankSpawnSFX;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn tanks params")
         TSubclassOf<ATankPawn> SpawnTankClass;
@@ -49,17 +58,7 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn tanks params")
         AMapLoader* LinkedMapLoader;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effects")
-        UParticleSystem* DestuctionParticleSystem;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
-        USoundBase* DestructionSound;
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Effects")
-        UParticleSystem* TankCreation;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
-        USoundBase* ConstructionSound;
+       
 
 public:
     // Sets default values for this actor's properties
@@ -80,4 +79,7 @@ protected:
 
     UFUNCTION()
         void DamageTaked(float DamageValue);
+
+    UFUNCTION(BlueprintImplementableEvent, Category = "TankFactory", meta = (DisplayName = "OnDie", ScriptName = "OnDie"))
+        void K2_PlayOnDie();
 };

@@ -15,6 +15,13 @@
 // Sets default values
 ATurret::ATurret()
 {
+
+}
+
+void ATurret::PostInitializeComponents()
+{
+    Super::PostInitializeComponents();
+
     UStaticMesh* TurretMeshTemp = LoadObject<UStaticMesh>(this, *TurretMeshPath);
     if (TurretMeshTemp)
     {
