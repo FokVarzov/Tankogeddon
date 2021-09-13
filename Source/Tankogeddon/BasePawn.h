@@ -103,6 +103,9 @@ public:
     UFUNCTION()
         FVector GetEyesPosition();
 
+    //UPROPERTY(EditAnywhere)
+    //float ForceStrength;
+
 private:
     UPROPERTY()
         ACannon* ActiveCannon;

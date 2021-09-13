@@ -11,6 +11,9 @@
 #include "TankPawn.h"
 #include <Kismet/GameplayStatics.h>
 #include "MapLoader.h"
+#include <Particles/ParticleSystemComponent.h>
+#include <Components/AudioComponent.h>
+#include <Engine/World.h>
 
 // Sets default values
 ATankFactory::ATankFactory()
@@ -24,9 +27,21 @@ ATankFactory::ATankFactory()
     BuildingMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Building Mesh"));
     BuildingMesh->SetupAttachment(SceneComp);
 
+    DestroyedMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Destroyed Mesh"));
+    DestroyedMesh->SetupAttachment(SceneComp);
+    DestroyedMesh->SetVisibility(false);
+
     TankSpawnPoint = CreateDefaultSubobject<UArrowComponent>(TEXT("Cannon setup point"));
     TankSpawnPoint->AttachToComponent(SceneComp, FAttachmentTransformRules::KeepRelativeTransform);
 
+    TankSpawnVFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Tank spawn VFX"));
+    TankSpawnVFX->SetupAttachment(TankSpawnPoint);
+    TankSpawnVFX->bAutoActivate = false;
+
+    TankSpawnSFX = CreateDefaultSubobject<UAudioComponent>(TEXT("Tank spawn SFX"));
+    TankSpawnSFX->SetupAttachment(TankSpawnPoint);
+    TankSpawnSFX->bAutoActivate = false;
+    
     HitCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("Hit collider"));
     HitCollider->SetupAttachment(SceneComp);
 
@@ -45,6 +60,9 @@ void ATankFactory::BeginPlay()
 {
     Super::BeginPlay();
 
+    BuildingMesh->SetVisibility(true);
+    DestroyedMesh->SetVisibility(false);
+
     if (LinkedMapLoader)
     {
         LinkedMapLoader->SetIsActivated(false);
@@ -58,27 +76,26 @@ void ATankFactory::SpawnNewTank()
 {
     FTransform SpawnTransform(TankSpawnPoint->GetComponentRotation(), TankSpawnPoint->GetComponentLocation(), FVector(1.f));
     ATankPawn* NewTank = GetWorld()->SpawnActorDeferred<ATankPawn>(SpawnTankClass, SpawnTransform, this, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
-    //
+    
     NewTank->SetPatrollingPoints(TankWayPoints);
-    //
+    
     UGameplayStatics::FinishSpawningActor(NewTank, SpawnTransform);
-    UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TankCreation, GetActorTransform());
-    UGameplayStatics::PlaySoundAtLocation(GetWorld(), ConstructionSound, GetActorLocation());
 
+    TankSpawnVFX->ActivateSystem();
+    TankSpawnSFX->Play();
 
 }
 
 void ATankFactory::Die()
 {
-    UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), DestuctionParticleSystem, GetActorTransform());
-    UGameplayStatics::PlaySoundAtLocation(GetWorld(), DestructionSound, GetActorLocation());
-    
-    
+       
     if (LinkedMapLoader)
     {
         LinkedMapLoader->SetIsActivated(true);
     }
-    Destroy();
+    BuildingMesh->SetVisibility(false);
+    DestroyedMesh->SetVisibility(true);
+    K2_PlayOnDie();
 }
 
 void ATankFactory::DamageTaked(float DamageValue)
